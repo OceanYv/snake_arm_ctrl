@@ -64,7 +64,7 @@ Description : 新建文档
 
 - 需求描述
   - 进行机械臂的逆运动学规划与控制；
-  - 实现雅可比矩阵伪逆法、脊线法FTH两种基本控制方式；路径关键点
+  - 实现雅可比矩阵伪逆法、脊线法FTH两种基本控制方式；
   - 之后通过策略将两种方式进行结合，以获得更优的控制效果。
 - 主要输入
   - 期望姿态/路径/路径关键点
@@ -82,7 +82,6 @@ Description : 新建文档
   - 运动到指定关节角请求（service，名称JointsAngleExp，类型snake_arm_msg/JointsAngleGo）
   - 运动停止请求（service，名称StopMove_srv，类型std_srvs/Trigger）
   - 快速复位请求（service，名称RepositionReq_srv，类型std_srvs/Trigger）
-  （后续可能删除）- 当前关节位姿（service，名称ArmPoseCurReq，类型/SnakeArmPose）
 - 主要输出
   - 当前关节角（topic，名称JointsAngleCur，类型JointsAngle）
   - 当前末端位姿（topic，名称EndPoseCur，类型geometry_msgs/Pose）
@@ -92,6 +91,28 @@ Description : 新建文档
 
 - 需求描述
   - 设置一个功能包专门用来生成自定义的msg、srv
+
+### snake_base_ctrl
+- 需求描述
+  - 实现对基座AMR的控制，实现机械臂的前后进给；
+- 主要输入
+  - 运动到指定位置请求（service，名称BasePoseReq，类型snake_arm_msg/DoubleReq）
+- 主要输出
+  - 对下位机的运动控制指令
+
+ ### snake_arm_visual
+- 需求描述
+  - 机器视觉相关功能包，包括点云获取、点云拼接、对象曲面的三维重建、曲面的分割及扫查路径规划等；
+- 主要输入
+  - 来自深度相机的原始点云信息
+- 主要输出
+  - 环境点云
+  - 曲面拟合及路径规划结果
+  - 末端位姿反馈
+ 
+### snake_arm
+- 需求描述
+  - 对pos_kinematic_ctrl、snake_base_ctrl两个底层驱动包进行集成，并调用RVIZ图形界面
 
 ## 程序运动中rviz要显示的一些东西及其发布方式
 
