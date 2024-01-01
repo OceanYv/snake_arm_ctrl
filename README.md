@@ -1,22 +1,29 @@
-# 蛇形臂视觉伺服扫差运动控制程序总体设计说明书
+# 蛇形臂视觉伺服扫查运动控制程序总体设计说明书
 
 ## 版本信息
 
 ```Version info
 Author      : Ocean Yv
-Funciton    : 蛇形机械臂运动控制与规划功能包；
+Funciton    : 蛇形机械臂运动控制与规划功能包。研究毕设的部分内容。
               实现正运动学控制、逆运动学控制、静态规划、动态规划等功能；
+              在此基础上，通过深度相机实现外部环境建模、拟合、扫查路径规划、视觉伺服。
+
 Environment : Ubuntu18.04 + ROS Melodic  + gcc7.5.0
 Dependencies: 
               通常需要自行安装的包/库：ros-melodic-serial Eigen3
               通常已经随ROS安装的包：roscpp rospy message_generation std_msgs geometry_msgs std_srvs
+              若使用视觉伺服功能包，可能还要自行安装特定版本的PCL点云库，具体见相关功能包中的.md。
+
+Vision      : 1.0.0
+Data        : 2023.05.15
+Description : 基本完成了功能的开发、调试、测试等；
+              
+------
+**History**
 
 Vision      : 0.6.0
 Data        : 2023.01.31
 Description : 确定了相对具体的inverse_kinematic_ctrl包基本结构，进行设计概要和代码的编写；
-              
-------
-**History**
 
 Vision      : 0.5.0
 Data        : 2022.11.22
@@ -49,7 +56,7 @@ Description : 新建文档
 
 ## 整体设计
 
-- 见论文第二、五章（论文见同目录下PDF）
+- 主要是运动学部分，见论文第二、五章（论文见同目录下PDF）
 
 ## 子模块设计
 
