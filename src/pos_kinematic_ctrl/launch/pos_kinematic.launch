@@ -1,0 +1,33 @@
+<launch>
+
+    <!-- 该文件指定了日志信息的输出等级 -->
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find snake_arm)/config/rosconsole.config"/>
+
+    <!--若仅通过RVIZ进行仿真过程的观测,需要设为true-->
+    <arg name="simulation" default="false"/>
+
+    <!-- <node name="pos_kinematic" pkg="pos_kinematic_ctrl" type="pos_kinematic_ctrl_node" output="log" required="true"> -->
+    <node name="pos_kinematic" pkg="pos_kinematic_ctrl" type="pos_kinematic_ctrl_node" output="screen" required="true">
+        <param name="simulation" type="bool" value="$(arg simulation)"/>
+        <rosparam command="load" file="$(find pos_kinematic_ctrl)/config/motor_commu.yaml"/>
+        <rosparam command="load" file="$(find pos_kinematic_ctrl)/config/serial_commu.yaml"/>
+        <rosparam command="load" file="$(find pos_kinematic_ctrl)/config/pos_kinematic_ctrl.yaml"/>
+    </node>
+
+    <!-- 基座模型 -->
+    <node pkg="tf" type="static_transform_publisher" name="model_base_broadcaster" args="0 0 0 0 0 -1.570796326795 base model_base 50" />
+    <param name="model_base_description" textfile="$(find pos_kinematic_ctrl)/urdf/model_base.urdf"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="model_base_pub" >
+        <remap from="robot_description" to="model_base_description" />
+    </node>
+
+    <!-- 环境模型 -->
+    <node pkg="tf" type="static_transform_publisher" name="model_env_broadcaster" args="1.97 0 0 3.14159265359 0 0 world model_env 50" /> <!-- 柜子边缘相距关节16的轴线200mm -->
+    <param name="model_env_description" textfile="$(find pos_kinematic_ctrl)/urdf/model_env.urdf"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="model_env_pub" >
+        <remap from="robot_description" to="model_env_description" />
+    </node>
+
+    <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pos_kinematic_ctrl)/config/rviz_cfg.rviz" required="true" /> -->
+
+</launch>

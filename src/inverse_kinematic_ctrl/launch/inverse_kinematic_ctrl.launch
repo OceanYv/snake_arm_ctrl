@@ -1,0 +1,18 @@
+<launch>
+
+    <!-- 该文件指定了日志信息的输出等级 -->
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find snake_arm)/config/rosconsole.config"/>
+
+    <!--若仅通过RVIZ进行仿真过程的观测、不依赖snake_base_ctrl与pos_kinematic_ctrl，需要设为true-->
+    <!-- 目前true选项不可用 -->
+    <arg name="simulation" default="false"/>
+    
+    <!--载入参数并开启节点-->
+    <rosparam ns="inverse_kinematic_ctrl" command="load" file="$(find inverse_kinematic_ctrl)/config/inverse_kinematic_ctrl.yaml"/>
+    <node name="inverse_kinematic_ctrl" pkg="inverse_kinematic_ctrl" type="inverse_kinematic_ctrl_node" output="screen" required="true">
+        <param name="simulation" type="bool" value="$(arg simulation)"/>
+    </node>
+    
+    <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find inverse_kinematic_ctrl)/config/inverse_kinematic_ctrl.rviz" required="true" /> -->
+
+</launch>

@@ -1,0 +1,23 @@
+#串口通信参数配置
+# BAUD_STM   波特率，需与下位机保持一致，因此应设置为9600
+# RATE       与下位机通信的频率，受波特率限制只能到20（理论上是24，但是需要留余量）
+serial_cfg:
+  SERIAL_STM: /dev/ttyUSB0
+  BAUD_STM: 9600
+  TIMEOUT: 50
+  RATE: 20
+
+speed_limit:  #单位为m/s rad/s
+  x: 0.3
+  y: 0.0
+  r: 1.0
+
+# BasePosiTole 判断移动机器人到位的容差,单位：m，默认值：0.02m
+# velo_ceff    通过偏差计算速度的PID系数
+snake_base_ctrl:
+  BasePosiTole: 0.02
+  velo_ceff_p : 1.5
+  velo_ceff_i : 0.0
+  velo_ceff_d : 0.07
+
+base_posi_savefile: "/home/ocici/ROS_CODE/3_snake_arm/src/snake_base_ctrl/config/base_posi_savefile.txt" # 需要更改为自己存放功能包的路径。单位：mm

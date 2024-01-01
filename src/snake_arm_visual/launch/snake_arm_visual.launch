@@ -1,0 +1,29 @@
+<launch>
+
+    <!-- 该文件指定了日志信息的输出等级 -->
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find snake_arm)/config/rosconsole.config"/>
+
+    <!-- 行为控制参数 -->
+    <arg name="load_pointcloudfile_from_file"  default="true"/> <!--指定原始点云文件的来源，设为true时可用于不连接设备时的仿真-->
+    <arg name="visual_servo_on"  default="true"/> <!-- 是否开启视觉伺服功能 -->
+    <arg name="open_camera_device"  default="false"/> <!-- 是否开启相机设备 -->
+
+    <!-- 没有开启机械臂时的临时发布，用于程序调试或仿真 -->
+    <!-- <node pkg="tf" type="static_transform_publisher" name="end_broadcaster" args="1 0 0.6 0 0 0 world arm_end_comp 50" /> -->
+
+    <!-- 开启相机节点 -->
+    <group if="$(arg open_camera_device)">
+        <include file="$(find snake_arm_visual)/launch/start_camera.launch"/>
+    </group>
+
+    <!--视觉处理与控制节点-->
+    <rosparam ns="snake_arm_visual" command="load" file="$(find snake_arm_visual)/config/snake_arm_visual.yaml"/>
+    <rosparam ns="snake_visual_servo" command="load" file="$(find snake_arm_visual)/config/snake_visual_servo.yaml"/>
+    <node name="snake_arm_visual" pkg="snake_arm_visual" type="snake_arm_visual_node" output="screen" required="true">
+        <param name="pointcloud_from_file" type="bool" value="$(arg load_pointcloudfile_from_file)"/>
+        <param name="visual_servo_on" type="bool" value="$(arg visual_servo_on)"/>
+    </node>
+
+    <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find snake_arm_visual)/config/snake_arm_visual.rviz" required="true"/> -->
+
+</launch>

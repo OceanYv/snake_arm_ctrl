@@ -1,0 +1,30 @@
+# data_save_path        存放点云数据及相应位姿数据的路径
+# EndposeError_Savefile 存放运动偏差的文件
+data_save_path: "/home/ocici/ROS_CODE/3_snake_arm/src/snake_arm_visual/data/default"
+EndposeError_Savefile: "/home/ocici/ROS_CODE/3_snake_arm/src/snake_arm_visual/config/EndposeError.txt"
+
+# dist_min  获取点云的距离下限，单位:m
+# dist_max  获取点云的距离下限，单位:m
+dist_min: 0.25
+dist_max: 1.0
+
+# parents_resloution   配准中基准点云的分辨率，单位：m
+# capture_sample       捕获点云时随机降采样的倍数，整数
+# pre_icp_resloution   ICP之前再次体素滤波的分辨率，单位：m，未使用
+# statistical_filter_StddevMulThresh 通过相机捕获点云时，过滤游离点的阈值
+parents_resloution: 0.0035
+capture_sample: 12
+pre_icp_resloution: 0.0035
+statistical_filter_StddevMulThresh: 0.01
+
+# icp_Epsilon                    ICP拼接算法收敛条件，越小精度越大，收敛也越慢
+# icp_MaxCorrespondenceDistance  ICP拼接算法配准时考虑的最大偏差距离,根据自己数据采集的情况确定
+# icp_MaximumIterations          ICP拼接算法允许的最大迭代次数
+icp_Epsilon: 1.0e-9
+icp_MaxCorrespondenceDistance: 0.01
+icp_MaximumIterations: 100
+
+# ICPTf_ang_Max       允许的ICP计算得到的旋转矩阵对应旋转角的最大值，如果超过该值则认为此次配准异常，不采用其数据。单位：度
+# ICPTf_posi_Max      允许的ICP计算得到的平移向量范数最大值，如果超过该值则认为此次配准异常，不采用其数据，单位：m
+ICPTf_ang_Max: 8
+ICPTf_posi_Max: 0.05

@@ -1,0 +1,18 @@
+<launch>
+
+    <!-- 该文件指定了日志信息的输出等级 -->
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find snake_arm)/config/rosconsole.config"/>
+
+    <!--若仅通过RVIZ进行仿真过程的观测，需要设为true-->
+    <arg name="simulation" default="true"/>
+
+    <!--include其他launch文件-->
+    <include file="$(find snake_base_ctrl)/launch/snake_base_ctrl.launch">
+        <arg name="simulation" value="$(arg simulation)"/>
+    </include>
+    <include file="$(find pos_kinematic_ctrl)/launch/pos_kinematic.launch">
+        <arg name="simulation" value="$(arg simulation)"/>
+    </include>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find snake_arm)/config/snake_arm.rviz" required="false" />
+</launch>

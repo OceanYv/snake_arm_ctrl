@@ -1,0 +1,5 @@
+# 用于请求末端End到达指定位姿
+
+geometry_msgs/Pose Poses  # 位姿
+---
+bool success

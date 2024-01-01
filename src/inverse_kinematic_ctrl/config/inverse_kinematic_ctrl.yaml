@@ -1,0 +1,59 @@
+# 机械臂逆运动学配置参数
+SnakeArm:
+  PathCurve_CtrlPoints_Savefile: "/home/ocici/ROS_CODE/3_snake_arm/src/inverse_kinematic_ctrl/config/PathCurve_CtrlPoints.g2" # 需要更改为自己存放功能包的路径
+
+# 雅可比矩阵法的参数配置
+Jacobian:
+
+  # EndPose_Tolerance_ang  末端位姿偏差二范数容差。最大角度偏差error与设置容差toler的关系为：error=81*toler(度)。默认0.15。
+  # EndPose_Tolerance_posi 末端位姿偏差二范数容差。单位:mm。默认0.02。
+  # max_step_ang      一次迭代允许的最大转角，单位：度。默认20.0。
+  # max_step_posi     一次迭代允许的最大位移，单为：mm。默认200.0。
+  #                   根据实验结果，max_step_posi在150~350范围内，max_step_ang在15~35范围内时收敛速度最快，max_step_posi大约可以为max_step_ang的10倍。
+  #                   但是也要注意到收敛快的时候运动不一定稳定，机械臂可能会在大幅度摆动中运动到期望位置
+  # step_coef_min     迭代的步长系数。默认为1.1。
+  #                   实验表明，该值小于0.6时算法无法收敛；在1附近时收敛速度最快，但是也要注意到收敛快的时候运动不一定稳定
+  # singular_coef     判断是否接近奇异值的系数, 越大收敛越稳定但是速度慢。默认0.1。
+  #                   阻尼系数damper_coef取其二次平方根。
+  # weight_def        base、joint0~15的默认权重，无默认值。
+  # weight_joint_threshold 减小关节权重的角度阈值，在数学上为允许的关节角单次增加量最大值，单位：度。默认15.0。
+  # JacoIterateCNTMax 迭代计算允许的最大次数。默认200。
+  # regression_solu_on在更新自适应权重后，是否将权重代入雅克比矩阵进行重新求解。默认：true。
+  #                   如果设为false，基于weight_joint_threshold更新的权重向量将直接施加于解算后的结果，可能导致机械臂更易陷入关节限位处的局部极小值
+  #                   如果设为true，则基于weight_joint_threshold更新的权重向量将施加于雅克比矩阵中，并间接作用于解算结果，很多时候可以大大提高收敛速度
+  EndPose_Tolerance_ang: 0.1
+  EndPose_Tolerance_posi: 0.05
+  max_step_ang: 20.0
+  max_step_posi: 200.0
+  step_coef_min: 1.1
+  singular_coef: 0.2
+  weight_def: "[[200.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]"
+  weight_joint_threshold: 11
+  JacoIterateCNTMax: 200
+  regression_solu_on: true
+
+# 脊线法的参数配置
+FTL:
+  # Inter_Toler          计算单段机械臂工作曲线与曲线交点时允许的误差，单位：mm。默认值0.005。
+  # Ftl_End_Toler        控制机械臂末端运动时，迭代停止的最大位置误差，单位：mm。默认值0.01。
+  # FeedCoef             控制机械臂末端运动时，计算基部运动的比例因子，越小越稳定但收敛越慢。默认1.0。
+  # FTLBaseIterateCNTMax 控制机械臂基部运动时，迭代计算允许的最大次数。默认100。
+  # FTLEndIterateCNTMax  控制机械臂末端运动时，迭代计算允许的最大次数。默认200。
+  # VirtualPathCurvMax   通过虚拟路径进行FTL时，路径允许的最小曲率半径, 单位：mm。默认237.0
+  # FTL_Part_Num         通过FTL法控制的基部臂段数，应介于1～JOINT_NUM。默认JOINT_NUM
+  Inter_Toler: 0.02
+  Ftl_End_Toler: 0.02
+  FeedCoef: 1.1
+  FTLBaseIterateCNTMax: 100
+  FTLEndIterateCNTMax: 300
+  VirtualPathCurvMax: 150.0
+  FTL_Part_Num: 8
+
+# 混合法参数配置
+Hybrid:
+  # VirtualJointWeight_def    虚拟关节的权重,默认：55
+  # Hybird_singular_coef      判断是否接近奇异值的系数, 越大收敛越稳定但是速度慢。默认0.1。
+  # Hyb_Part_Num              通过FTL法控制的基部臂段数，应介于0～JOINT_NUM-3。默认JOINT_NUM-4
+  VirtualJointWeight_def: 75
+  Hybird_singular_coef: 0.1
+  Hyb_Part_Num: 4

@@ -1,0 +1,9 @@
+#串口通信参数配置
+serial_config:
+
+  # DevicePort 设备端口号
+  # BaudRate   波特率
+  # TimeOut    超时时间  
+  Port: "/dev/ttyUSB1"
+  BaudRate: 115200
+  TimeOut: 50

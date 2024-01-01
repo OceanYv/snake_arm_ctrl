@@ -1,0 +1,5 @@
+# 用于发出一个数据类型为Double的请求
+
+float64 value
+---
+bool success

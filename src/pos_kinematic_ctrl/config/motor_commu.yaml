@@ -1,0 +1,29 @@
+# CAN分析仪参数配置
+can_config:
+
+  # DeviceType 设备类型，4代表USBCAN-2A或USBCAN-2C或CANalyst-II。
+  # DeviceInd  设备索引，从0开始分别对应计算机上挂载的各个分析仪。当只挂载一个时就取0。
+  # CANInd     CAN通道索引。对应卡的CAN通道号,CAN1为0,CAN2为1。
+  DeviceType: 4
+  DeviceInd: 0
+  CANInd: 0
+
+  # AccCode    验收码。对经过屏蔽码过滤为“有关位”进行匹配,全部匹配成功后,此帧可以被接收,否则不接收。
+  # AccMask    屏蔽码。对接收的CAN帧ID进行过滤,对应位为0的是“有关位”,对应位为1的是“无关位”。推荐设置为0xFFFFFFFF,即全部接收。
+  # Timing0    波特率定时器0(BTR0)。默认0x00。
+  # Timing1    波特率定时器1(BTR1)。默认0x14。这两个计数器的值共同决定CAN的波特率，默认参数对应1Mpbs。
+  # Filter     滤波方式,允许设置为0-3; 0/1-接收所有类型; 2-只接收标准帧; 3-只接收扩展帧。
+  # Mode       模式。0-正常模式; 1-只听模式; 2-自发自收模式。
+  AccCode: 0
+  AccMask: "0xFFFFFFFF"
+  Timing0: "0x00"
+  Timing1: "0x14"
+  Filter: 1
+  Mode: 0
+
+
+  # StopJudge_Period     判停时的问讯周期，单位：s
+  # StopJudge_Timeout    判停超时时间，单位：s。
+motor_config:
+  StopJudge_Period: 0.05
+  StopJudge_Timeout: 1.5

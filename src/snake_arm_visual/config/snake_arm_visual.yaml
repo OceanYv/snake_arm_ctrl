@@ -1,0 +1,114 @@
+##################
+# 重建曲面的参数配置
+##################
+
+build_surface:
+
+  # data_save_path      存放点云数据及相应位姿数据的路径，默认"/home/ocici/ROS_CODE/3_snake_arm/src/snake_arm_visual/data/default"
+  # capture_resloution  通过相机捕获点云时,体素滤波的分辨率，默认0.001
+  # merge_resloution    完成点云拼接后,对拼接结果体素滤波的分辨率，默认0.002
+  # statistical_filter_StddevMulThresh 通过相机捕获点云时，过滤游离点的阈值，默认0.01
+  data_save_path: "/home/ocici/ROS_CODE/3_snake_arm/src/snake_arm_visual/data/default"
+  capture_resloution: 0.0008
+  merge_resloution: 0.0021
+  statistical_filter_StddevMulThresh: 0.007
+
+  ##################
+  # ICP拼接算法配置参数
+  ##################
+
+  # icp_Epsilon                     收敛条件，越小精度越高，收敛也越慢, 默认1.0-8
+  # icp_MaxCorrespondenceDistance_1 第一次配准时考虑的最大偏差距离,根据自己数据采集的情况确定,默认0.02
+  # icp_MaxCorrespondenceDistance_2 第二次配准时考虑的最大偏差距离,根据自己数据采集的情况确定,默认0.005，应比第一次配准时的精度要求高
+  # icp_MaximumIterations           允许的最大迭代次数,默认 1000
+  icp_Epsilon: 1.0e-8
+  icp_MaxCorrespondenceDistance_1: 0.01
+  icp_MaxCorrespondenceDistance_2: 0.002
+  icp_MaximumIterations: 100
+
+  #########
+  # 聚类参数
+  #########
+  
+  # 点云范围限制参数,用于ICP拼接后、聚类之前的点云切割，默认10 -10 10 -10 5 0
+  PassThrough_xp: 2.05
+  PassThrough_xn: 1.65
+  PassThrough_yp: -0.1
+  PassThrough_yn: -0.25
+  PassThrough_zp: 1.75
+  PassThrough_zn: 1.35
+
+  # Normal_search_num        计算用于聚类的切线之前，需要先计算法线。这个参数指定了计算法线时周围搜索点的个数
+  # cluster_ClusterTolerance 近邻搜索的搜索半径，默认0.005
+  # cluster_MinClusterSize   最小聚类尺寸（点的个数），默认100
+  # cluster_MaxClusterSize   最大聚类尺寸（点的个数），默认100000
+  Normal_search_num: 30
+  cluster_ClusterTolerance: 0.0031
+  cluster_MinClusterSize: 400
+  cluster_MaxClusterSize: 100000
+
+  # customRegionGrowing参数，用于自定义的聚类判据（Ps:很奇怪，求出来的曲率半径比预期的大了差不多50倍，不知道为啥）
+  #   PrincipalCurvatures_RadiusSearch 评估主曲率时的搜索半径，越大效率越低，但也至少为merge_resloution的N倍，默认0.005
+  #   CRG_plane_curvature      当曲率小于该值时，认为是平面，使用法线方向夹角进行同面的判断。默认0.04
+  #   CRG_max_radius_dela      当曲率半径差小于该值时，认为曲率半径接近。在此情况下，主切线的方向可能不准确，直接通过曲率半径差来判别。默认0.1
+  #   CRG_max_angle            当切线或法线夹角小于该值时，认为共面。单位degree，默认10.0。
+  #                            该参数对算法效果影响较大，且对merge_resloution、PrincipalCurvatures_RadiusSearch敏感
+  PrincipalCurvatures_RadiusSearch: 0.025 # 0.04
+  CRG_plane_curvature: 0.05 # 0.03
+  CRG_max_radius_dela: 0.2 # 0.15
+  CRG_max_angle: 10 # 6
+
+  ##################
+  # 曲面拟合及其预处理参数
+  ##################
+
+  # double remove_rate_x      曲面拟合前边缘去毛刺时，包围盒x轴方向上的去除率，默认0.95
+  # double remove_rate_y      曲面拟合前边缘去毛刺时，包围盒y轴方向上的去除率，默认0.9
+  # surface_order             B样条曲面的阶数
+  # surface_fit_iterations    曲面拟合中，求精迭代的次数，其中每插入一个迭代控制点，b样条曲面的每个参数方向上的控制点大约翻倍
+  # surface_fit_iterations    曲面拟合中，求精迭代完成后，继续优化的迭代数量
+
+  # surface_fit_interior_smoothness   内部表面的光滑度
+  # surface_fit_interior_weight       用于表面内部优化的权重
+  # surface_fit_boundary_smoothness   表面边界的平滑度
+  # surface_fit_boundary_weight       表面边界优化的权重
+
+  remove_rate_x: 0.9
+  remove_rate_y: 0.9
+
+  surface_order: 3
+  surface_fit_refinement: 2
+  surface_fit_iterations: 2
+
+  surface_fit_interior_smoothness: 0.2
+  surface_fit_interior_weight: 1.0
+  surface_fit_boundary_smoothness: 0.2
+  surface_fit_boundary_weight: 0.0
+
+###############
+# 路径规划配置参数
+###############
+
+path_plan:
+
+  # scan_path_dist    往复路径的间隔，与相控阵探头的长度有关;
+  # scan_step_length  路径上离散点的间隔。对于线阵，与相控阵探头垂直阵列排布方向的波束角有关；对于面阵，相控阵探头的宽度有关;
+  # ScanPnt_Flt_NeighborNum     过滤不在面上的扫查点时，求取近邻距离平均值时近邻点的个数，默认：25
+  # ScanPnt_Flt_StddevMulThresh 过滤不在面上的扫查点时，求取近邻距离平均值时的距离阈值, 默认：0.05
+  scan_path_dist: 0.038
+  scan_step_length: 0.0006
+  ScanPnt_Flt_NeighborNum: 25
+  ScanPnt_Flt_StddevMulThresh: 0.008
+
+
+  ############
+  # 伺服控制参数
+  ############
+
+visual_servo:
+
+  # EndposeError_Tole_posi    视觉伺服闭环控制中，位置的允差，单位：m；默认：0.02
+  # EndposeError_Tole_ang     视觉伺服闭环控制中，角度的允差，单位：度；默认：5.0
+
+  EndposeError_Tole_posi: 0.005
+  EndposeError_Tole_ang: 3.0

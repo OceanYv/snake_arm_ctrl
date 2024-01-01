@@ -1,0 +1,167 @@
+<launch>
+    <!--====================-->
+    <!-- 发布相机安装的位置关系 -->
+    <!--====================-->
+    <!-- <node pkg="tf" type="static_transform_publisher" name="camera_broadcaster" args="-0.19092 0 0.08073 0 0 0  arm_end_comp camera_base_link 50" /> -->
+    <node pkg="tf" type="static_transform_publisher" name="camera_broadcaster" args="-0.03842 0 0.06573 0 0 0  arm_end_comp camera_base_link 50" />
+
+    <!--==========================================================================-->
+    <!-- 参考自文件/opt/ros/melodic/share/realsense2_camera/launch/rs_camera.launch -->
+    <!-- 这些参数也可在rqt_reconfigure中进行可视化的实时调节                            -->
+    <!--==========================================================================-->
+
+    <!-- 相机识别配置 -->
+    <arg name="serial_no"           default=""/> <!--指定要连接设备的序列号，若空则随机连接，在多相机时才用得到-->
+    <arg name="usb_port_id"         default=""/> <!--指定要连接设备的串口号，作用同上。格式为x-x-->
+    <arg name="device_type"         default=""/> <!--指定要连接设备的型号，作用同上。-->
+
+    <!-- 相机启动行为配置 -->
+    <arg name="rosbag_filename"         default=""/> <!--publish topics from rosbag file-->
+    <arg name="initial_reset"           default="true"/> <!--设备在使用前是否重置，可避免一些相机未正常关闭导致的问题-->
+    <arg name="wait_for_device_timeout" default="-1.0"/>
+    <arg name="reconnect_timeout"       default="6.0"/> <!--When the driver cannot connect to the device try to reconnect after this timeout (in seconds).-->
+
+    <arg name="json_file_path"          default=""/>
+    <arg name="camera"                  default="camera"/> <!--ns名称-->
+    <arg name="tf_prefix"               default="$(arg camera)"/> <!--tf坐标系前缀-->
+    <arg name="external_manager"        default="false"/>
+    <arg name="manager"                 default="realsense2_camera_manager"/>
+    <arg name="output"                  default="log"/>
+    <arg name="respawn"                 default="false"/>
+
+    <!-- 传感器配置 -->
+    <arg name="align_depth"         default="true"/> <!--是否对深度图进行对齐，开启后将发布消息aligned_depth_to_color-->
+                                                     <!--同时，发布的点云将基于aligned_depth_to_color的图像来构建-->
+    <arg name="filters"             default="pointcloud"/> <!--支持以下选项，可多选，用逗号分隔-->
+                                                           <!--colorizer    - 把深度图像转换为16bit的RGB图像发布，否则为8bit的灰度图-->
+                                                           <!--pointcloud   - 进行/camera/depth/color/points话题的发布-->
+                                                           <!--hdr_merge    - 允许深度相机通过连续的两帧进行图像合成,两帧采用不同的曝光和增益参数,配置见stereo_module/*-->
+                                                           <!-- https://github.com/IntelRealSense/librealsense/blob/master/doc/post-processing-filters.md -->
+                                                           <!--disparity    - convert depth to disparity before applying other filters and back.-->
+                                                           <!--spatial      - filter the depth image spatially.-->
+                                                           <!--temporal     - filter the depth image temporally.-->
+                                                           <!--hole_filling - apply hole-filling filter.-->
+                                                           <!--decimation   - reduces depth scene complexity.-->
+    <arg name="enable_sync"         default="true"/>  <!--各个传感器数据的时间同步,在开启pointcloud滤波器时,该功能会自动打开-->
+    <arg name="unite_imu_method"    default=""/>  <!--设置值之后,会有一个imu的topic代替gyro和accel的topic,发布频率为gyro的频率-->
+                                                      <!--可选linear_interpolation copy-->
+
+    <arg name="enable_infra"        default="true"/> <!-- 红外图像 -->
+    <arg name="enable_infra1"       default="false"/>
+    <arg name="enable_infra2"       default="false"/>
+    <arg name="infra_width"         default="848"/>
+    <arg name="infra_height"        default="480"/>
+    <arg name="infra_fps"           default="6"/>
+
+    <arg name="enable_color"        default="true"/>
+    <arg name="color_width"         default="960"/>
+    <arg name="color_height"        default="540"/>
+    <arg name="color_fps"           default="15"/>
+
+    <arg name="enable_depth"        default="true"/>
+    <arg name="depth_width"         default="848"/>
+    <arg name="depth_height"        default="480"/>
+    <arg name="depth_fps"           default="6"/>
+
+    <arg name="enable_fisheye"      default="false"/>
+    <arg name="fisheye_width"       default="640"/>
+    <arg name="fisheye_height"      default="480"/>
+    <arg name="fisheye_fps"         default="-1"/>
+
+    <arg name="enable_gyro"         default="false"/> <!--是否开启陀螺仪-->
+    <arg name="enable_accel"        default="false"/> <!--是否开启加速度计-->
+    <arg name="enable_pose"         default="false"/> <!--是否开启       -->
+    <arg name="gyro_fps"            default="400"/>  <!--陀螺仪数据发布帧率，支持400 200-->
+    <arg name="accel_fps"           default="250"/>  <!--加速度计数据发布帧率，支持250 63-->
+
+    <arg name="clip_distance"             default="1"/> <!--深度图像的最大检测范围,米-->
+    <arg name="linear_accel_cov"          default="0.01"/> <!--IMU读数的方差-->
+    <!-- <arg name="angular_velocity_cov"      default="0.01"/> -->
+
+    <!--一些topic上的配置-->
+    <arg name="enable_pointcloud"         default="true"/>
+    <arg name="pointcloud_texture_stream" default="RS2_STREAM_COLOR"/> <!--点云纹理配置,具体作用未知-->
+    <arg name="pointcloud_texture_index"  default="0"/> <!--点云纹理配置,具体作用未知-->
+    <arg name="allow_no_texture_points"   default="false"/> <!--允许没有纹理部分的点云在染色后发布,实际修改后感觉没啥变化,可能是因为前面两个参数的缘故?-->
+
+    <arg name="publish_odom_tf"           default="true"/>
+    <arg name="publish_tf"                default="true"/> <!--是否发布相机中各个传感器的tf tree-->
+    <arg name="tf_publish_rate"           default="0"/>    <!--发布频率,设为零时为静态发布-->
+
+    <arg name="stereo_module/exposure/1"  default="7500"/> <!--两组曝光与增益参数,同filter中的hdr_merge配合使用-->
+    <arg name="stereo_module/gain/1"      default="16"/>
+    <arg name="stereo_module/exposure/2"  default="1"/>
+    <arg name="stereo_module/gain/2"      default="16"/>
+    
+    <group ns="$(arg camera)">
+        <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+            <arg name="tf_prefix"                value="$(arg tf_prefix)"/>
+            <arg name="external_manager"         value="$(arg external_manager)"/>
+            <arg name="manager"                  value="$(arg manager)"/>
+            <arg name="output"                   value="$(arg output)"/>
+            <arg name="respawn"                  value="$(arg respawn)"/>
+            <arg name="serial_no"                value="$(arg serial_no)"/>
+            <arg name="usb_port_id"              value="$(arg usb_port_id)"/>
+            <arg name="device_type"              value="$(arg device_type)"/>
+            <arg name="json_file_path"           value="$(arg json_file_path)"/>
+
+            <arg name="enable_pointcloud"        value="$(arg enable_pointcloud)"/>
+            <arg name="pointcloud_texture_stream" value="$(arg pointcloud_texture_stream)"/>
+            <arg name="pointcloud_texture_index"  value="$(arg pointcloud_texture_index)"/>
+            <arg name="enable_sync"              value="$(arg enable_sync)"/>
+            <arg name="align_depth"              value="$(arg align_depth)"/>
+
+            <arg name="fisheye_width"            value="$(arg fisheye_width)"/>
+            <arg name="fisheye_height"           value="$(arg fisheye_height)"/>
+            <arg name="enable_fisheye"           value="$(arg enable_fisheye)"/>
+
+            <arg name="depth_width"              value="$(arg depth_width)"/>
+            <arg name="depth_height"             value="$(arg depth_height)"/>
+            <arg name="enable_depth"             value="$(arg enable_depth)"/>
+
+            <arg name="color_width"              value="$(arg color_width)"/>
+            <arg name="color_height"             value="$(arg color_height)"/>
+            <arg name="enable_color"             value="$(arg enable_color)"/>
+
+            <arg name="infra_width"              value="$(arg infra_width)"/>
+            <arg name="infra_height"             value="$(arg infra_height)"/>
+            <arg name="enable_infra"             value="$(arg enable_infra)"/>
+            <arg name="enable_infra1"            value="$(arg enable_infra1)"/>
+            <arg name="enable_infra2"            value="$(arg enable_infra2)"/>
+
+            <arg name="fisheye_fps"              value="$(arg fisheye_fps)"/>
+            <arg name="depth_fps"                value="$(arg depth_fps)"/>
+            <arg name="infra_fps"                value="$(arg infra_fps)"/>
+            <arg name="color_fps"                value="$(arg color_fps)"/>
+            <arg name="gyro_fps"                 value="$(arg gyro_fps)"/>
+            <arg name="accel_fps"                value="$(arg accel_fps)"/>
+            <arg name="enable_gyro"              value="$(arg enable_gyro)"/>
+            <arg name="enable_accel"             value="$(arg enable_accel)"/>
+            <arg name="enable_pose"              value="$(arg enable_pose)"/>
+
+            <arg name="publish_tf"               value="$(arg publish_tf)"/>
+            <arg name="tf_publish_rate"          value="$(arg tf_publish_rate)"/>
+
+            <arg name="filters"                  value="$(arg filters)"/>
+            <arg name="clip_distance"            value="$(arg clip_distance)"/>
+            <arg name="linear_accel_cov"         value="$(arg linear_accel_cov)"/>
+            <!-- <arg name="angular_velocity_cov"     value="$(arg angular_velocity_cov)"/> -->
+            <arg name="initial_reset"            value="$(arg initial_reset)"/>
+            <arg name="reconnect_timeout"        value="$(arg reconnect_timeout)"/>
+            <arg name="wait_for_device_timeout"  value="$(arg wait_for_device_timeout)"/>
+            <arg name="unite_imu_method"         value="$(arg unite_imu_method)"/>
+            <arg name="publish_odom_tf"          value="$(arg publish_odom_tf)"/>
+            <arg name="stereo_module/exposure/1" value="$(arg stereo_module/exposure/1)"/>
+            <arg name="stereo_module/gain/1"     value="$(arg stereo_module/gain/1)"/>
+            <arg name="stereo_module/exposure/2" value="$(arg stereo_module/exposure/2)"/>
+            <arg name="stereo_module/gain/2"     value="$(arg stereo_module/gain/2)"/>
+
+            <arg name="allow_no_texture_points"  value="$(arg allow_no_texture_points)"/>
+        </include>
+    </group>
+
+  <!-- Loads the camera model -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find snake_arm_visual)/urdf/d435i_camera.urdf.xacro' use_nominal_extrinsics:=false"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+</launch>

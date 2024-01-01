@@ -1,0 +1,18 @@
+# 机械臂正运动学配置参数
+SnakeArm:
+
+  # Origin_JointAngle 存放原点关节角。单位：度
+  #                   依次为第一节、第二节。。。第八节的关节角；
+  #                   支持关节数的增减，应与/include/common_define.h中的JOINT_NUM保持一致，若不匹配，缺省值默认为0；
+  Origin_JointAngle: "[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]"
+
+  # MotorZeroCompensate 电机软零点补偿。单位：度(目前好像没用到)
+  #                     依次为第一节、第二节。。。第八节的三个电机的补偿；
+  #                     支持关节数的增减，应与/include/common_define.h中的JOINT_NUM保持一致，若不匹配，缺省值默认为0；
+  MotorZeroCompensate: "[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]"
+
+  Max_StepLength: 1.0 # 最大单步转角。单位：度
+  Line_Allowance: 0.3 # 余量释放量相对步长的比例系数，过大会极大影响运动精度且无所裨益，过小可能会使运动过程中的电机有一定卡顿。
+
+  JointAngle_Savefile: "/home/ocici/ROS_CODE/3_snake_arm/src/pos_kinematic_ctrl/config/joint_angle_savefile.txt" # 需要更改为自己存放功能包的路径。单位：度
+  MotorZero_savefile: "/home/ocici/ROS_CODE/3_snake_arm/src/pos_kinematic_ctrl/config/motor_zero_savefile.txt"
