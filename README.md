@@ -1,2 +1,177 @@
-# snake_arm_ctrl
-The control of serpentine manipulator based on ROS.
+# 蛇形臂视觉伺服扫差运动控制程序总体设计说明书
+
+## 版本信息
+
+```Version info
+Author      : Ocean Yv
+Funciton    : 蛇形机械臂运动控制与规划功能包；
+              实现正运动学控制、逆运动学控制、静态规划、动态规划等功能；
+Environment : Ubuntu18.04 + ROS Melodic  + gcc7.5.0
+Dependencies: 
+              通常需要自行安装的包/库：ros-melodic-serial Eigen3
+              通常已经随ROS安装的包：roscpp rospy message_generation std_msgs geometry_msgs std_srvs
+
+Vision      : 0.6.0
+Data        : 2023.01.31
+Description : 确定了相对具体的inverse_kinematic_ctrl包基本结构，进行设计概要和代码的编写；
+              
+------
+**History**
+
+Vision      : 0.5.0
+Data        : 2022.11.22
+Description : 近日开始编写逆运动学程序，将之前的static_plan包改为inverse_kinematic_ctrl并制定其接口；
+              根据实际的实现情况修改了pos_kinematic_ctrl包的接口描述；
+              完善了“使用说明”；
+
+Vision      : 0.1.0
+Data        : 2022.4.26
+Description : 新建文档
+```
+
+## 参考链接
+
+### 自定义massage、msg数组
+
+- snake_arm_msg功能包中定义了所有自定义msg、srv，相关使用方法可参考：
+<https://blog.csdn.net/u013453604/article/details/72903398>
+
+### std_srvs/Trigger
+
+- 一个非常简单的srv类型，可用于动作的触发，定义可通过以下指令查看：
+`rossrv show std_srvs/Trigger`
+- 使用方法可参考：<https://guyuehome.com/34661>
+
+### 回调函数传入多个参数
+
+- 采用boost::bind进行参数的绑定，具体可参考博客：
+<https://blog.csdn.net/weixin_44742084/article/details/123895847?spm=1001.2014.3001.5502>
+
+## 整体设计
+
+- 见论文第二、五章（论文见同目录下PDF）
+
+## 子模块设计
+
+### inverse_kinematic_ctrl
+
+- 需求描述
+  - 进行机械臂的逆运动学规划与控制；
+  - 实现雅可比矩阵伪逆法、脊线法FTH两种基本控制方式；路径关键点
+  - 之后通过策略将两种方式进行结合，以获得更优的控制效果。
+- 主要输入
+  - 期望姿态/路径/路径关键点
+  - 控制参数（方法的指定、关节的指定、容差的指定）
+- 主要输出
+  - 运动到指定关节角请求（service，名称JointsAngleExp，类型snake_arm_msg/JointsAngleGo）
+  - 运动到指定关节角请求序列
+
+### pos_kinematic_ctrl
+
+- 需求描述
+  - 实现机器人的正向运动控制，不考虑运动轨迹和姿态，只考虑最终关节角
+  - 通过CAN分析仪实现与电机的通讯，通过下位机（STM32）实现对制动器的控制
+- 主要输入
+  - 运动到指定关节角请求（service，名称JointsAngleExp，类型snake_arm_msg/JointsAngleGo）
+  - 运动停止请求（service，名称StopMove_srv，类型std_srvs/Trigger）
+  - 快速复位请求（service，名称RepositionReq_srv，类型std_srvs/Trigger）
+  （后续可能删除）- 当前关节位姿（service，名称ArmPoseCurReq，类型/SnakeArmPose）
+- 主要输出
+  - 当前关节角（topic，名称JointsAngleCur，类型JointsAngle）
+  - 当前末端位姿（topic，名称EndPoseCur，类型geometry_msgs/Pose）
+  - 外设控制数据流（硬件bus）
+
+### snake_arm_msg
+
+- 需求描述
+  - 设置一个功能包专门用来生成自定义的msg、srv
+
+## 程序运动中rviz要显示的一些东西及其发布方式
+
+- 机械臂当前姿态，由pos_kinematic_ctrl包以tf tree的方式发布，每次运动完一小步且node进行检查时发布更新；
+- 机械臂当前姿态（pre），由inverse_kinematic_ctrl包以点的序列的方式发布，用于ftl控制过程/Jaco控制过程的可视化，每完成一次迭代运算后发布更新；
+- B样条曲线脊线，由inverse_kinematic_ctrl包以点的序列的方式发布，inverse_kinematic_ctrl包启动后或者调用adjust_curve函数后发布更新；
+- B样条曲线脊线控制点，与B样条曲线脊线一起发布更新；
+- B样条曲线脊线（temp），由inverse_kinematic_ctrl包以点的序列的方式发布，用于adjust_curve函数中调整过程的可视化，每进行一次调整操作后发布更新；
+- B样条曲线脊线控制点（temp），与B样条曲线脊线（temp）一起发布更新；
+- 虚拟路径，由inverse_kinematic_ctrl包以点的序列的方式发布，用于adjust_curve函数中调整过程的可视化，每进行一次虚拟控制点的更新后发布更新；
+
+## 需要注意的几个问题
+
+1. 单位统一
+
+- 尽量减少角度、弧度、100*角度之间的转化。
+- 在各主要函数接口上可统一采用弧度，在与用户交互时才使用degree，在与电机交互时才使用0.01degree；
+
+2. 包pos_kinematic_ctrl采用状态机写法，其他包在与该包通讯时，要考虑到这个
+
+- IDLE CORRECT WAIT MOVE_AUTO MOVE_DEBUG ERROR
+  - MOVE_AUTO: 通过调用各关节角度控制接口，进行运动的控制；
+  - MOVE_DEBUG：通过CAN直接操作电机、制动器等；
+
+- Ps：这一点是最开始设计架构时候的想法（因为当时在做硬件语言开发的项目，深受状态机荼毒），后来实现的过程中发现这样的写法在软件中并没有太大用。不过由于代码改写可能面对的不确定性，依旧给予保留。
+
+## 使用说明
+
+1. 编译过程
+在第一次使用时，可能需要先编译自定义msg类型的包，并将产生的devel文件添加到环境变量之后再编译其他包
+
+``` shell
+  catkin_make -DCATKIN_WHITELIST_PACKAGES="snake_arm_msg"
+  source ./devel/setup.bash
+  catkin_make -DCATKIN_WHITELIST_PACKAGES=""
+```
+
+2. 各功能包的doc/目录下有各自的markdown说明文件，在使用相应包前，建议阅读其中对该包结构与使用方法的详细描述。
+
+3. 仿真模式下可不依赖于任何外部硬件（相机、电机、基座VGA等）
+
+3. inverse_kinematic_ctrl包支持JOINT_NUM的更改，但是修改时要同时修改以下几处：
+   1. 在[pos_kinematic_ctrl/include/common_define.h]中修改JOINT_NUM的值；
+   2. 将[pos_kinematic_ctrl/config/joint_angle_savefile.txt]中的角度值个数与JOINT_NUM对应起来，为2*JOINT_NUM个；
+   3. 将[inverse_kinematic_ctrl/config/inverse_kinematic_ctrl.yaml]中weight_def的值的个数与JOINT_NUM对应起来，为2*JOINT_NUM + 1个;
+   4. 修改之后需要对代码进行重新编译。
+   5. pos_kinematic_ctrl包中的功能不支持JOINT_NUM的更改（毕竟硬件上是定死的），因此修改后需将inverse_kinematic_ctrl包设置为仿真模式！！！
+
+4. 权限获取
+   1. 插入控制制动器的串口后，需要获取串口权限【sudo chmod 777 /dev/ttyUSB0 】；
+   2. 插入CAN分析仪的USB后，也需要获得串口权限。获取方式见【src/pos_kinematic_ctrl/doc/柔性机械臂_正运动学控制功能包_概要设计说明书.md】
+   3. 使用前，推荐再阅读一下各个包中的/doc/\*.md，若有需要再阅读/doc/\*.docx；
+
+5. 复位命令
+   - 机械臂复位 `rosservice call /RepositionReq`
+   - 底盘复位机 `rosservice call /BasePoseReq 0`
+
+6. 手动关闭电机 `rosservice call /ArmStopMove`。用于程序运行异常时可能导致的电机持续上电发热。
+
+7. 各模块启动流程：
+   1. 上位机通过USB连接移动底盘、CAN分析仪、STM32、相机、激光雷达；
+   2. 移动底盘上电，取消急停并按下绿色按钮。之后在上位机中通过`ls /dev/ttyUSB*`查看是否连接正常，并通过`sudo chmod 777 /dev/ttyUSB0`获取串口权限；
+   3. 机械臂制动器与电机上电，并打开控制制动器的STM32的供电。之后在上位机中通过`ls /dev/ttyUSB*`查看是否连接正常，并通过`sudo chmod 777 /dev/ttyUSB1`获取串口权限；
+   4. 通过`roslaunch snake_arm snake_arm_motion.launch`开启运动驱动功能,通过`src/snake_arm/launch/snake_arm_motion.launch`中的`simulation`选项，可以决定是无需硬件的仿真，还是与真实机器人交互的运行；
+   5. inverse_kinematic_ctrl包、snake_arm_visual包启动先后顺序无要求；
+   6. 关机之前若要复位，可调用前述复位命令；
+
+## 常用ROS工具命令
+   1. 查看msg/srv
+
+        ```shell
+        rosmsg list              # 列出系统中所有msg类型
+        rosmsg packages          # 列出系统中所有包含msg类型的包
+        rosmsg package PKG_NAME  # 列出指定包中的所有msg类型
+        rosmsg show MSG_NAME     # 查看msg内容
+        ```
+
+   2. tf_tree相关命令
+
+        ```shell
+        rosrun rqt_tf_tree rqt_tf_tree  # 以树状图的形式查看tf_tree
+        rosrun tf tf_echo FRAME1 FRAME2 # 查看指定两个坐标系之间的变换
+        ```
+
+   3. 关闭ros进程
+
+        ```shell
+        killall -9 roscore
+        killall -9 rosmaster
+        ```
